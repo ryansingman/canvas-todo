@@ -70,7 +70,9 @@ class CanvasTodo(threading.Thread):
             # print each assignment
             for assmnt in course_assignments:
                 # get due date string for assignment
-                due_date_str = datetime.fromisoformat(assmnt.due_at).strftime("%Y-%m-%d %H:%M")
+                due_date_str = datetime.strptime(
+                    assmnt.due_at, "%Y-%m-%dT%H:%M:%S%z"
+                ).strftime("%Y-%m-%d %H:%M")
 
                 # get submitted string for assignment
                 if assmnt.submission_types == ['none']:

@@ -28,7 +28,7 @@ def get_assignments(
                 a
                 for a in course.get_assignments()
                 if should_include(a, **kwargs)
-            ], key=lambda x: datetime.fromisoformat(x.due_at)
+            ], key=lambda x: datetime.strptime(x.due_at, "%Y-%m-%dT%H:%M:%S%z")
         )
         for course in courses
     }
@@ -51,6 +51,6 @@ def should_include(assmnt: Assignment, due_date_horizon: int) -> bool:
     """
     return (
         (
-            datetime.fromisoformat(assmnt.due_at) - datetime.now(timezone.utc)
+            datetime.strptime(assmnt.due_at, "%Y-%m-%dT%H:%M:%S%z") - datetime.now(timezone.utc)
         ).days < due_date_horizon
     )

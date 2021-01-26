@@ -55,7 +55,7 @@ def gen_app_config(canvas_conf: Dict) -> Dict:
     # NOTE: only prompts for active courses with start dates within the last 6 months
     app_conf["classes"] = []
     for course in canv.get_courses(enrollment_state="active"):
-        time_delt = datetime.now(timezone.utc) - datetime.fromisoformat(course.created_at)
+        time_delt = datetime.now(timezone.utc) - datetime.strptime(course.created_at, "%Y-%m-%dT%H:%M:%S%z")
         if time_delt.days < (6*30) and input(f"Include {course.name} [Y/n]?: ").lower() != "n":
             app_conf["classes"].append(course.id)
 
