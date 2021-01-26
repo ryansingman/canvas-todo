@@ -8,13 +8,16 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()    
     parser.add_argument(
         "command",
-        help="command to execute (config, update, ... <TODO>"
+        help="command to execute (config, run, ... <TODO>"
     )
 
     args = parser.parse_args()
 
+    # configure canvas todo app
     if args.command == "config":
         config.gen_config()
 
-    elif args.command == "update":
+    # run canvas todo app
+    elif args.command == "run":
         c_todo = canvas_todo.CanvasTodo()
+        c_todo.run()
