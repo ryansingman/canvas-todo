@@ -2,6 +2,7 @@ import threading
 from datetime import datetime
 from typing import Any, Dict, List
 
+import keyring
 from canvasapi import Canvas
 from canvasapi.course import Course
 from canvasapi.assignment import Assignment
@@ -31,7 +32,10 @@ class CanvasTodo(threading.Thread):
         self.app_conf = get_app_config()
 
         # create canvas obj
-        self.canv = Canvas(self.canvas_conf["api_url"], self.canvas_conf["api_key"])
+        self.canv = Canvas(
+            self.canvas_conf["api_url"],
+            keyring.get_password('canvas-token', self.canvas_conf["api_username"])
+        )
 
         # get user
         self.user = self.canv.get_current_user()

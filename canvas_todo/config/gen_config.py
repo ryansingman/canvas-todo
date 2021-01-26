@@ -2,6 +2,7 @@ import os
 from typing import Dict
 from datetime import datetime, timezone
 
+import keyring
 import yaml
 from canvasapi import Canvas
 
@@ -49,7 +50,10 @@ def gen_app_config(canvas_conf: Dict) -> Dict:
     app_conf["console_print"] = input("Print to console [Y/n]?: ").lower() != "n"
 
     # create canvas obj
-    canv = Canvas(canvas_conf["api_url"], canvas_conf["api_key"])
+    canv = Canvas(
+        canvas_conf["api_url"],
+        keyring.get_password('canvas-token', canvas_conf["api_username"])
+    )
 
     # get classes to watch
     # NOTE: only prompts for active courses with start dates within the last 6 months
@@ -74,7 +78,24 @@ def gen_app_config(canvas_conf: Dict) -> Dict:
 def gen_gkeep_config():
     """Generates yaml config from user input for google keep interface
     """
-    pass
+    # check for existing gkeep config
+    if (
+            os.path.exists(GKEEP_CONF_PATH) and
+            (input("Delete existing google keep config and restart [Y/n] ?: ").lower() == "n")
+    ):
+        with open(GKEEP_CONF_PATH, "r") as gkeep_conf_in:
+            return yaml.load(gkeep_conf_in)
+
+    # init gkeep conf
+    gkeep_conf = {}
+
+    # get API url, username, key
+    gkeep_conf["api_url"] = input("Google Keep URL: ")
+    gkeep_conf["api_username"] = input("Google Keep Username: ")
+    keyring.set_password('gkeep-token', gkeep_conf["api_username"], input("Google Keep Key: "))
+
+    return gkeep_conf
+
 
 def gen_canvas_config() -> Dict:
     """Generates yaml config from user input for canvas interface
@@ -95,9 +116,10 @@ def gen_canvas_config() -> Dict:
     # init canvas conf
     canvas_conf = {}
 
-    # get API url, key
+    # get API url, username, key
     canvas_conf["api_url"] = input("Canvas URL: ")
-    canvas_conf["api_key"] = input("Canvas Key: ")
+    canvas_conf["api_username"] = input("Canvas Username: ")
+    keyring.set_password('canvas-token', canvas_conf["api_username"], input("Canvas Key: "))
 
     # dump config
     with open(CANVAS_CONF_PATH, "w") as canvas_conf_out:
