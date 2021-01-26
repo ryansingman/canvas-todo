@@ -8,9 +8,10 @@ from canvasapi.course import Course
 from canvasapi.assignment import Assignment
 from colored import fore, style
 
+from .todo import GKeep
 from .assignments import get_assignments
 from .utils import get_courses_from_ids
-from .config import get_app_config, get_canvas_config   #, get_gkeep_config
+from .config import get_app_config, get_canvas_config, get_gkeep_config
 
 class CanvasTodo(threading.Thread):
     """CanvasTodo main class
@@ -31,11 +32,17 @@ class CanvasTodo(threading.Thread):
         # get app conf
         self.app_conf = get_app_config()
 
+        # get gkeep conf
+        self.gkeep_conf = get_gkeep_config()
+
         # create canvas obj
         self.canv = Canvas(
             self.canvas_conf["api_url"],
             keyring.get_password('canvas-token', self.canvas_conf["api_username"])
         )
+
+        # create todo obj (gkeep)
+        self.todo = GKeep(self.gkeep_conf)
 
         # get user
         self.user = self.canv.get_current_user()

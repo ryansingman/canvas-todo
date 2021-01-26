@@ -4,6 +4,8 @@ from datetime import datetime, timezone
 
 import keyring
 import yaml
+import gkeepapi
+from getpass import getpass
 from canvasapi import Canvas
 
 from .config_paths import APP_CONF_PATH, GKEEP_CONF_PATH, CANVAS_CONF_PATH
@@ -36,9 +38,10 @@ def gen_app_config(canvas_conf: Dict) -> Dict:
     # check for existing app config
     if (
             os.path.exists(APP_CONF_PATH) and
-            (input("Delete existing app config and restart [Y/n]?: ").lower() == "n")
+            (input("Delete existing app config and restart [y/N]?: ").lower() != "y")
     ):
-        return None
+        with open(APP_CONF_PATH, "r") as app_conf_in:
+            return yaml.load(app_conf_in)
 
     # init app conf
     app_conf = {}
@@ -55,13 +58,36 @@ def gen_app_config(canvas_conf: Dict) -> Dict:
         keyring.get_password('canvas-token', canvas_conf["api_username"])
     )
 
+    # init classes dict
+    app_conf["classes"] = {}
+
+    # init colors
+    colors = [c.name for c in gkeepapi.node.ColorValue]
+    color_idx = 0
+    print(f"Possible course colors:\n  {colors}")
+
     # get classes to watch
     # NOTE: only prompts for active courses with start dates within the last 6 months
-    app_conf["classes"] = []
     for course in canv.get_courses(enrollment_state="active"):
+        # get time delta
         time_delt = datetime.now(timezone.utc) - datetime.strptime(course.created_at, "%Y-%m-%dT%H:%M:%S%z")
+
+        # check if should include course
         if time_delt.days < (6*30) and input(f"Include {course.name} [Y/n]?: ").lower() != "n":
-            app_conf["classes"].append(course.id)
+            # get course parameters
+            app_conf["classes"][course.id] = {
+                "nickname": input(f"  Course Nickname [default: {course.name}]: ") or course.name,
+                "color": getattr(
+                    gkeepapi.node.ColorValue,
+                    (
+                        input(f"  Color (default: {colors[color_idx % len(colors)]}): ") or
+                        colors[color_idx % len(colors)]
+                    )
+                )
+            }
+
+            # increment color idx
+            color_idx += 1
 
     # get assignment config
     app_conf["assignments_conf"] = {
@@ -81,7 +107,7 @@ def gen_gkeep_config():
     # check for existing gkeep config
     if (
             os.path.exists(GKEEP_CONF_PATH) and
-            (input("Delete existing google keep config and restart [Y/n] ?: ").lower() == "n")
+            (input("Delete existing google keep config and restart [y/N] ?: ").lower() != "y")
     ):
         with open(GKEEP_CONF_PATH, "r") as gkeep_conf_in:
             return yaml.load(gkeep_conf_in)
@@ -89,10 +115,15 @@ def gen_gkeep_config():
     # init gkeep conf
     gkeep_conf = {}
 
-    # get API url, username, key
-    gkeep_conf["api_url"] = input("Google Keep URL: ")
+    # get API username, key
     gkeep_conf["api_username"] = input("Google Keep Username: ")
-    keyring.set_password('gkeep-token', gkeep_conf["api_username"], input("Google Keep Key: "))
+    keep = gkeepapi.Keep()
+    keep.login(gkeep_conf["api_username"], getpass("Google Keep Password: "))
+    keyring.set_password('gkeep-key', gkeep_conf["api_username"], keep.getMasterToken())
+
+    # dump config
+    with open(GKEEP_CONF_PATH, "w") as gkeep_conf_out:
+        yaml.dump(gkeep_conf, gkeep_conf_out)
 
     return gkeep_conf
 
@@ -108,7 +139,7 @@ def gen_canvas_config() -> Dict:
     # check for existing canvas config
     if (
             os.path.exists(CANVAS_CONF_PATH) and
-            (input("Delete existing canvas config and restart [Y/n] ?: ").lower() == "n")
+            (input("Delete existing canvas config and restart [y/N] ?: ").lower() != "y")
     ):
         with open(CANVAS_CONF_PATH, "r") as canvas_conf_in:
             return yaml.load(canvas_conf_in)
@@ -119,7 +150,7 @@ def gen_canvas_config() -> Dict:
     # get API url, username, key
     canvas_conf["api_url"] = input("Canvas URL: ")
     canvas_conf["api_username"] = input("Canvas Username: ")
-    keyring.set_password('canvas-token', canvas_conf["api_username"], input("Canvas Key: "))
+    keyring.set_password('canvas-token', canvas_conf["api_username"], getpass("Canvas Key: "))
 
     # dump config
     with open(CANVAS_CONF_PATH, "w") as canvas_conf_out:
