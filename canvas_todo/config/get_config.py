@@ -52,4 +52,4 @@ def _get_config(conf_path: os.PathLike) -> Dict:
         contents of yaml config, as dict
     """
     with open(conf_path, "r") as conf_file:
-        return yaml.load(conf_file)
+        return yaml.load(conf_file, Loader=yaml.Loader)

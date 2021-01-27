@@ -9,6 +9,7 @@ from getpass import getpass
 from canvasapi import Canvas
 
 from .config_paths import APP_CONF_PATH, GKEEP_CONF_PATH, CANVAS_CONF_PATH
+from ..utils import time_utils
 
 
 def gen_config():
@@ -41,13 +42,13 @@ def gen_app_config(canvas_conf: Dict) -> Dict:
             (input("Delete existing app config and restart [y/N]?: ").lower() != "y")
     ):
         with open(APP_CONF_PATH, "r") as app_conf_in:
-            return yaml.load(app_conf_in)
+            return yaml.load(app_conf_in, Loader=yaml.Loader)
 
     # init app conf
     app_conf = {}
 
     # get update rate [default: 30 min]
-    app_conf["update_rate"] = float(input("App update rate in minutes [default: 30 min]: ") or 30)
+    app_conf["update_rate"] = 60 * float(input("App update rate in minutes [default: 30 min]: ") or 30)
 
     # get if should print to console
     app_conf["console_print"] = input("Print to console [Y/n]?: ").lower() != "n"
@@ -70,7 +71,7 @@ def gen_app_config(canvas_conf: Dict) -> Dict:
     # NOTE: only prompts for active courses with start dates within the last 6 months
     for course in canv.get_courses(enrollment_state="active"):
         # get time delta
-        time_delt = datetime.now(timezone.utc) - datetime.strptime(course.created_at, "%Y-%m-%dT%H:%M:%S%z")
+        time_delt = datetime.now(timezone.utc) - time_utils.from_iso8601(course.created_at)
 
         # check if should include course
         if time_delt.days < (6*30) and input(f"Include {course.name} [Y/n]?: ").lower() != "n":
@@ -110,7 +111,7 @@ def gen_gkeep_config():
             (input("Delete existing google keep config and restart [y/N] ?: ").lower() != "y")
     ):
         with open(GKEEP_CONF_PATH, "r") as gkeep_conf_in:
-            return yaml.load(gkeep_conf_in)
+            return yaml.load(gkeep_conf_in, Loader=yaml.Loader)
 
     # init gkeep conf
     gkeep_conf = {}
@@ -120,6 +121,9 @@ def gen_gkeep_config():
     keep = gkeepapi.Keep()
     keep.login(gkeep_conf["api_username"], getpass("Google Keep Password: "))
     keyring.set_password('gkeep-key', gkeep_conf["api_username"], keep.getMasterToken())
+
+    # get if should pin course notes
+    gkeep_conf["pin_notes"] = input("Pin notes [Y/n]?: ").lower() == n
 
     # dump config
     with open(GKEEP_CONF_PATH, "w") as gkeep_conf_out:
@@ -142,7 +146,7 @@ def gen_canvas_config() -> Dict:
             (input("Delete existing canvas config and restart [y/N] ?: ").lower() != "y")
     ):
         with open(CANVAS_CONF_PATH, "r") as canvas_conf_in:
-            return yaml.load(canvas_conf_in)
+            return yaml.load(canvas_conf_in, Loader=yaml.Loader)
 
     # init canvas conf
     canvas_conf = {}
