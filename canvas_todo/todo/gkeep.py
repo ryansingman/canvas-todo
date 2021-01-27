@@ -49,7 +49,7 @@ class GKeep(TodoBase):
         # iterate over courses
         for course, course_params in courses.items():
             # add course todo list if doesn't already exist
-            if not len(course_note_list := list(self.keep.find(course_params["nickname"]))):
+            if len(course_note_list := list(self.keep.find(course_params["nickname"]))) == 0:
                 course_note = self.keep.createList(course_params["nickname"])
                 course_note.color = course_params["color"]
 
@@ -105,7 +105,7 @@ class GKeep(TodoBase):
             course_todo_list = list(self.keep.find(course_params["nickname"]))
 
             # if course list already exists
-            if len(course_todo_list):
+            if len(course_todo_list) > 0:
                 todo_dict[course] = [
                     Task.from_gkeep_task(keep_task)
                     for keep_task in course_todo_list[0].items

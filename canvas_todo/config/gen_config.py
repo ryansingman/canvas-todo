@@ -48,7 +48,9 @@ def gen_app_config(canvas_conf: Dict) -> Dict:
     app_conf = {}
 
     # get update rate [default: 30 min]
-    app_conf["update_rate"] = 60 * float(input("App update rate in minutes [default: 30 min]: ") or 30)
+    app_conf["update_rate"] = 60 * float(
+        input("App update rate in minutes [default: 30 min]: ") or 30
+    )
 
     # get if should print to console
     app_conf["console_print"] = input("Print to console [Y/n]?: ").lower() != "n"
@@ -123,7 +125,7 @@ def gen_gkeep_config():
     keyring.set_password('gkeep-key', gkeep_conf["api_username"], keep.getMasterToken())
 
     # get if should pin course notes
-    gkeep_conf["pin_notes"] = input("Pin notes [Y/n]?: ").lower() == n
+    gkeep_conf["pin_notes"] = input("Pin notes [Y/n]?: ").lower() == "n"
 
     # dump config
     with open(GKEEP_CONF_PATH, "w") as gkeep_conf_out:

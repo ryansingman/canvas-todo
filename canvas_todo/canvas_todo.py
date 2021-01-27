@@ -6,12 +6,11 @@ from time import sleep
 import keyring
 from canvasapi import Canvas
 from canvasapi.course import Course
-from canvasapi.assignment import Assignment
 from colored import fore, style
 
 from .todo import GKeep, Task, Completed, Update
 from .assignments import get_assignments
-from .utils import get_courses_from_ids, time_utils
+from .utils import get_courses_from_ids
 from .config import get_app_config, get_canvas_config, get_gkeep_config
 
 
@@ -84,7 +83,8 @@ class CanvasTodo(threading.Thread):
             sleep(self.app_conf["update_rate"])
 
 
-    def print_assignments(self, asssignments: Dict[Course, List[Task]]):
+    @staticmethod
+    def print_assignments(asssignments: Dict[Course, List[Task]]):
         """Pretty prints assignments for each course
 
         Parameters
@@ -99,8 +99,9 @@ class CanvasTodo(threading.Thread):
             for assmnt in course_assignments:
                 print("  " + str(assmnt))
 
+    @staticmethod
     def gen_update_todo_dict(
-        self, todo_dict: Dict[int, List[Task]], canvas_tasks: Dict[Course, List[Task]]
+            todo_dict: Dict[int, List[Task]], canvas_tasks: Dict[Course, List[Task]]
     ) -> Dict[int, Dict[Update, List[Any]]]:
         """Generates update dictionary consisting of change to make to todo
 
@@ -130,8 +131,8 @@ class CanvasTodo(threading.Thread):
                 if not canv_task in todo_tasks:
                     # check if same task exists, but is marked incomplete in todo
                     if (
-                        (canv_task.name, canv_task.due_date) in
-                        [(t.name, t.due_date) for t in todo_tasks]
+                            (canv_task.name, canv_task.due_date) in
+                            [(t.name, t.due_date) for t in todo_tasks]
                     ):
                         # mark task as complete in todo if complete in canvas
                         if canv_task.completed == Completed.COMPLETE:
