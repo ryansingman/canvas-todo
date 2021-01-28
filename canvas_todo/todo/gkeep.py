@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, Dict, List
 
 import keyring
@@ -7,6 +8,7 @@ from .base import TodoBase
 from .task import Task
 from .update import Update
 from .completed import Completed
+from ..utils import time_utils
 
 
 class GKeep(TodoBase):
@@ -77,12 +79,35 @@ class GKeep(TodoBase):
 
             # sort tasks by due date
             course_note.sort_items(
-                key=lambda x: Task.from_gkeep_task(x).due_date
+                key=self.key_func
             )
 
         # sync updates to google drive
         self.keep.sync()
 
+
+    @staticmethod
+    def key_func(task_str: str) -> datetime:
+        """Returns datetime object given task string
+
+        Parameters
+        ----------
+        task_str : str
+            task string to generate key from
+
+        Returns
+        -------
+        datetime
+            datetime object generated from task string
+        """
+        task = Task.from_gkeep_task(task_str)
+
+        # return max time if due date doesn't exist (goes to end of list)
+        if task.due_date is None:
+            return time_utils.max_time()
+
+        else:
+            return task.due_date
 
     def request_todo_state(self, courses: Dict[int, Any]) -> Dict[int, List[Task]]:
         """Requests and returns todo state from Google Keep API

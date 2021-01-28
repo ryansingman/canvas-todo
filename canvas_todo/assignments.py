@@ -36,7 +36,7 @@ def get_assignments(
                 Task.from_canvas_assmnt(a, user)
                 for a in course.get_assignments()
                 if should_include(a, **kwargs)
-            ], key=lambda x: x.due_date
+            ], key=lambda x: x.due_date if not x.due_date is None else time_utils.max_time()
         )
         for course in courses
     }

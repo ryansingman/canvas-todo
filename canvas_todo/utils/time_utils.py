@@ -35,9 +35,15 @@ def from_due_date_str(date_str: str) -> datetime:
     datetime
         datetime object, created from date string
     """
-    return datetime.strptime(
-        date_str, DUE_DATE_FORMAT
-    ).astimezone(tz.tzlocal()).replace(second=0)
+    try:
+        return datetime.strptime(
+            date_str, DUE_DATE_FORMAT
+        ).astimezone(tz.tzlocal()).replace(second=0)
+    except ValueError as e:
+        if date_str == "no due date":
+            return None
+        else:
+            raise e
 
 
 def to_due_date_str(dt: datetime) -> str:
@@ -53,7 +59,10 @@ def to_due_date_str(dt: datetime) -> str:
     str
         formatted due date string
     """
-    return dt.strftime(DUE_DATE_FORMAT)
+    try:
+        return dt.strftime(DUE_DATE_FORMAT)
+    except AttributeError:
+        return "no due date"
 
 
 def from_iso8601(date_str: str) -> datetime:
@@ -69,6 +78,20 @@ def from_iso8601(date_str: str) -> datetime:
     datetime
         datetime object, created from date str
     """
-    return datetime.strptime(
-        date_str, ISO8601_DATE_FORMAT
-    ).replace(tzinfo=tz.tzutc()).astimezone(tz.tzlocal()).replace(second=0)
+    try:
+        return datetime.strptime(
+            date_str, ISO8601_DATE_FORMAT
+        ).replace(tzinfo=tz.tzutc()).astimezone(tz.tzlocal()).replace(second=0)
+    except TypeError:
+        return None
+
+
+def max_time() -> datetime:
+    """Returns max time datetime object
+
+    Returns
+    -------
+    datetime
+        max time datetime object
+    """
+    return datetime.max.replace(tzinfo=tz.tzutc())
