@@ -29,5 +29,3 @@ You can run the app using the following command:
 ```bash
 $ python main.py run
 ```
-
-> For now, all this will do is print your completed and upcoming assignments for each course at your prompting. There is no Google Keep or other todo application integration at this point.
