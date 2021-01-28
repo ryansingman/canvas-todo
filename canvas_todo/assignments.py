@@ -64,4 +64,5 @@ def should_include(assmnt: Assignment, due_date_horizon: int) -> bool:
             (
                 time_utils.from_iso8601(assmnt.due_at) - datetime.now(timezone.utc)
             ).days < due_date_horizon
+        )
     )
