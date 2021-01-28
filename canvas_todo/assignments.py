@@ -51,6 +51,7 @@ def should_include(assmnt: Assignment, due_date_horizon: int) -> bool:
         assignment to check if meet criteria
     due_date_horizon : int
         maximum number of days from current date to due date
+        note: automatically included in due date horizon if no due date
 
     Returns
     -------
@@ -59,6 +60,8 @@ def should_include(assmnt: Assignment, due_date_horizon: int) -> bool:
     """
     return (
         (
-            time_utils.from_iso8601(assmnt.due_at) - datetime.now(timezone.utc)
-        ).days < due_date_horizon
+            assmnt.due_at is None or
+            (
+                time_utils.from_iso8601(assmnt.due_at) - datetime.now(timezone.utc)
+            ).days < due_date_horizon
     )
